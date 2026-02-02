@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config(); 
+dotenv.config();
 
 import express from "express";
 import mongoose from "mongoose";
@@ -10,24 +10,40 @@ import blogRoutes from "./routes/blogRoutes.js";
 
 const app = express();
 
-// Middleware
+/* ---------------- MIDDLEWARE ---------------- */
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+/* ---------------- STATIC FILES ---------------- */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+/* ---------------- ROUTES ---------------- */
 app.use("/api/blogs", blogRoutes);
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGODB_URL)
-  .then(() => console.log(" MongoDB connected"))
-  .catch((err) => console.log(" MongoDB connection error:", err));
+app.get("/", (req, res) => {
+  res.send("API is running on Vercel 🚀");
+});
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+/* ---------------- DATABASE ---------------- */
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) return;
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URL);
+    isConnected = true;
+    console.log("✅ MongoDB connected");
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error);
+  }
+};
+
+connectDB();
+
+/* ❌ NO app.listen() on Vercel */
+/* ✅ EXPORT THE APP */
+export default app;
